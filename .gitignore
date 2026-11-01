@@ -1,0 +1,16 @@
+# Python virtual environment
+.venv/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+
+# MLflow generated files
+mlruns/
+
+# Temporary files
+*.log
+.DS_Store
+
+# Synthetic learning dataset
+data/raw/network_traffic.csv
