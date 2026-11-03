@@ -24,7 +24,7 @@ DATA_DIR = PROJECT_ROOT / "data" / "processed"
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
 
 # Registered model version
-MODEL_URI = "models:/NIDS-RandomForest/1"
+MODEL_URI = "models:/NIDS-RandomForest/2"
 
 
 def main():

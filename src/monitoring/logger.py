@@ -14,6 +14,7 @@ def log_prediction(
     model_name,
     model_version
 ):
+    print(f"DEBUG: Logger received model version = {model_version}")
     LOG_DIR.mkdir(parents=True, exist_ok=True)
 
     file_exists = LOG_FILE.exists()

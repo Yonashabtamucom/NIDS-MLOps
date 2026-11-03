@@ -12,8 +12,7 @@ client = MlflowClient()
 model_name = "NIDS-RandomForest"
 
 # Latest successful Random Forest run
-run_id = "8d47712535c4422ea6e0e3df9cf4b122"
-
+run_id = "7a39ddbfee1e4fa198855541be19efc4"
 model_uri = f"runs:/{run_id}/model"
 
 # Register the model

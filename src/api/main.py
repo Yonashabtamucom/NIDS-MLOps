@@ -20,8 +20,10 @@ MODEL_DIR = PROJECT_ROOT / "models"
 
 PREPROCESSOR_PATH = MODEL_DIR / "preprocessor.joblib"
 
-MODEL_URI = "models:/NIDS-RandomForest/1"
+MODEL_NAME = "NIDS-RandomForest"
+MODEL_ALIAS = "champion"
 
+MODEL_URI = f"models:/{MODEL_NAME}@{MODEL_ALIAS}"
 
 # ==========================================
 # 2. LOAD REGISTERED MODEL AND PREPROCESSOR
@@ -29,11 +31,23 @@ MODEL_URI = "models:/NIDS-RandomForest/1"
 
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
 
+# Connect to MLflow Model Registry
+client = mlflow.MlflowClient()
+
 print("Loading registered NIDS model...")
 
+# Find the version currently assigned to champion
+registered_version = client.get_model_version_by_alias(
+    MODEL_NAME,
+    MODEL_ALIAS,
+)
+
+MODEL_VERSION = registered_version.version
+
+# Load the model using its alias
 model = mlflow.sklearn.load_model(MODEL_URI)
 
-print("Loading saved preprocessing pipeline...")
+print(f"Loaded {MODEL_NAME}, version {MODEL_VERSION}")
 
 preprocessor = joblib.load(PREPROCESSOR_PATH)
 
@@ -79,7 +93,7 @@ def home():
     return {
         "message": "NIDS API is running!",
         "model": "NIDS-RandomForest",
-        "version": "1",
+        "version": str(MODEL_VERSION),
         "status": "ready",
     }
 
@@ -93,7 +107,7 @@ def model_info():
 
     return {
         "model_name": "NIDS-RandomForest",
-        "model_version": "1",
+        "model_version": str(MODEL_VERSION),
         "input_features": len(FEATURE_NAMES),
         "prediction_classes": {
             "0": "Normal",
@@ -171,9 +185,8 @@ def predict(request: PredictionRequest):
             prediction=prediction,
             attack_probability=round(attack_probability, 4),
             model_name="NIDS-RandomForest",
-            model_version="1",
+            model_version=str(MODEL_VERSION),
         )
-
         # Return the prediction to the API user
         return {
             "prediction": prediction,
@@ -184,8 +197,7 @@ def predict(request: PredictionRequest):
                 attack_probability, 4
             ),
             "model": "NIDS-RandomForest",
-            "model_version": "1",
-        }
+            "model_version": str(MODEL_VERSION),        }
 
     except HTTPException:
         raise
