@@ -1,16 +1,44 @@
+
 # Python virtual environment
 .venv/
+venv/
 
 # Python generated files
 __pycache__/
 *.py[cod]
+*.pyo
 
-# MLflow generated files
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# MLflow local tracking and artifacts
 mlruns/
+mlartifacts/
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
 
-# Temporary files
+# DVC local cache
+.dvc/cache/
+
+# Generated processed datasets
+data/processed/
+
+# Trained model artifacts
+models/*.joblib
+models/*.pkl
+models/*.pt
+models/*.pth
+
+# Generated prediction logs
+reports/monitoring/predictions.csv
+
+# Logs and temporary files
 *.log
 .DS_Store
+Thumbs.db
 
 # Synthetic learning dataset
 data/raw/network_traffic.csv
