@@ -1,10 +1,12 @@
-
-from pathlib import Path
-
 import joblib
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+
+from pathlib import Path
+from src.monitoring.lineage import (
+    get_git_commit,
+    get_dvc_data_versions,)
 
 from scipy.sparse import load_npz
 
@@ -62,6 +64,7 @@ def load_processed_data():
 # 4. TRAIN, EVALUATE AND TRACK A MODEL
 # --------------------------------------------------
 
+
 def train_and_log_model(
     model,
     model_name,
@@ -74,19 +77,32 @@ def train_and_log_model(
 
     with mlflow.start_run(run_name=model_name) as run:
 
+        # 1. Capture code and dataset versions
+        git_commit = get_git_commit()
+        dataset_versions = get_dvc_data_versions()
+
+        # 2. Record lineage information in MLflow
+        mlflow.set_tag("git_commit", git_commit)
+
+        for dataset, version in dataset_versions.items():
+            mlflow.set_tag(
+                f"data_version_{dataset}",
+                version,
+            )
+
         print(f"\nTraining {model_name}...")
 
-        # Record model parameters
+        # 3. Record model parameters
         mlflow.log_params(parameters)
 
-        # Train the model
+        # 4. Train the model
         model.fit(X_train, y_train)
 
-        # Make predictions
+        # 5. Make predictions
         predictions = model.predict(X_test)
         probabilities = model.predict_proba(X_test)[:, 1]
 
-        # Calculate evaluation metrics
+        # 6. Calculate evaluation metrics
         metrics = {
             "accuracy": accuracy_score(y_test, predictions),
             "precision": precision_score(y_test, predictions),
@@ -95,10 +111,10 @@ def train_and_log_model(
             "roc_auc": roc_auc_score(y_test, probabilities),
         }
 
-        # Record metrics in MLflow
+        # 7. Record metrics in MLflow
         mlflow.log_metrics(metrics)
 
-        # Create classification report and confusion matrix
+        # 8. Create classification report and confusion matrix
         report = classification_report(
             y_test,
             predictions,
@@ -110,7 +126,7 @@ def train_and_log_model(
             predictions,
         )
 
-        # Record evaluation results as JSON artifacts
+        # 9. Record evaluation results as artifacts
         mlflow.log_dict(
             report,
             "classification_report.json",
@@ -121,19 +137,19 @@ def train_and_log_model(
             "confusion_matrix.json",
         )
 
-        # Record additional information
+        # 10. Record additional information
         mlflow.set_tag("dataset", "UNSW-NB15")
         mlflow.set_tag("task", "Binary Network Intrusion Detection")
         mlflow.set_tag("model_type", model_name)
 
-        # Log the trained model
+        # 11. Log the trained model
         mlflow.sklearn.log_model(
-        sk_model=model,
-        name="model",
-        skops_trusted_types=[
-        "sklearn.tree._tree.Tree"],)
+            sk_model=model,
+            name="model",
+            skops_trusted_types=["sklearn.tree._tree.Tree"],
+        )
 
-        # Also save a local copy
+        # 12. Save a local copy
         model_filename = (
             model_name.lower().replace(" ", "_") + ".joblib"
         )
@@ -143,7 +159,7 @@ def train_and_log_model(
             MODEL_DIR / model_filename,
         )
 
-        # Display results
+        # 13. Display results
         print(f"\n{model_name} RESULTS")
         print("-" * 45)
 
@@ -157,11 +173,9 @@ def train_and_log_model(
         print(classification_report(y_test, predictions))
 
         print("\nMLflow Run ID:", run.info.run_id)
-
         print("Saved local model:", model_filename)
 
     return metrics
-
 
 # --------------------------------------------------
 # 5. MAIN TRAINING FUNCTION
